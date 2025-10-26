@@ -12,3 +12,4 @@ export default {
   warn: (message, meta) => write('warn', message, meta),
   error: (message, meta) => write('error', message, meta),
 }
+

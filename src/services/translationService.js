@@ -33,3 +33,4 @@ export default {
     throw new Error('Unsupported format. Use "flat" or "nested"')
   },
 }
+

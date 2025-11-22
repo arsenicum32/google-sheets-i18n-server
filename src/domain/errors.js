@@ -17,3 +17,4 @@ export class ValidationError extends AppError {
     super(message, 400, 'VALIDATION_ERROR')
   }
 }
+

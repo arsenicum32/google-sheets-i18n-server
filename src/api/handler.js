@@ -17,3 +17,4 @@ const handler = (fn) => async (req, res) => {
 }
 
 export default handler
+

@@ -49,3 +49,4 @@ export default cors(
     get('/*', (_req, res) => send(res, 404, { error: 'Not found' })),
   ),
 )
+

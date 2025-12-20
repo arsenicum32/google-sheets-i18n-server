@@ -13,3 +13,4 @@ server.listen(config.port, '0.0.0.0', () => {
     time: new Date().toISOString(),
   }))
 })
+

@@ -137,3 +137,4 @@ export default class Cache {
     this.items.clear()
   }
 }
+

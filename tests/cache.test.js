@@ -114,3 +114,4 @@ describe('Cache', () => {
     expect(fetcher).toHaveBeenCalledTimes(1)
   })
 })
+

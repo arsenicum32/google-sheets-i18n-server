@@ -14,3 +14,4 @@ USER node
 EXPOSE 7996
 
 CMD ["node", "src/server.js"]
+

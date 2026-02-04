@@ -1,21 +1,11 @@
-# Webpack plugin example
+# webpack-plugin example
 
-This example writes translation JSON files into the Webpack output directory during build.
-
-## Output
-
-For variant `main` and hash `abc123`, the plugin writes:
-
-```text
-languages.main.abc123.json
-en.main.abc123.json
-ru.main.abc123.json
-```
+Writes per-language JSON files into the webpack output directory at build time.
 
 ## Usage
 
-```ts
-import SaverLangsPlugin from './SaverLangsPlugin'
+```js
+const SaverLangsPlugin = require('./saverPlugin')
 
 plugins: [
   new SaverLangsPlugin({
@@ -23,12 +13,16 @@ plugins: [
     outputPath: path.resolve(__dirname, 'dist/i18n'),
     variant: 'main',
     hash: process.env.BUILD_HASH || 'dev',
-    languageNames: {
-      en: 'English',
-      ru: 'Русский',
-    },
+    languageNames: { en: 'English', ru: 'Русский' },
   }),
 ]
 ```
 
-If the API returns one language per request, call the endpoint for each language before writing files, or add a bulk endpoint on the server side.
+## Output
+
+```
+dist/i18n/languages.main.<hash>.json
+dist/i18n/en.main.<hash>.json
+dist/i18n/ru.main.<hash>.json
+```
+

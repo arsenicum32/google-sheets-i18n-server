@@ -1,25 +1,29 @@
-# Webpack static generation example
+# webpack-static-generation example
 
-This example fetches translations during Webpack build and generates localized static HTML files with `HtmlWebpackPlugin`.
+Fetches translations at build time and generates per-locale static HTML via HtmlWebpackPlugin.
 
-## Use case
+Best for landing pages and SEO-critical sites where translations must be baked into the HTML.
 
-Use this setup for static websites, portfolio pages, landing pages, or marketing pages where translations should be embedded into HTML at build time.
+## Usage
 
-## Environment
+```js
+// webpack.config.js
+module.exports = async () => {
+  const translations = Object.fromEntries(
+    await Promise.all(
+      LANGUAGES.map(async lang => [lang, await loadTranslations(lang)]),
+    ),
+  )
 
-```bash
-I18N_API_URL=http://localhost:7996/v1/projects/portfolio/translations
-DEFAULT_LANGUAGE=en
-TRANSLATION_TAGS=landing,about,sitemap
+  return {
+    plugins: LANGUAGES.map(lang =>
+      new HtmlWebpackPlugin({
+        template: './src/index.html',
+        filename: lang === 'en' ? 'index.html' : `${lang}/index.html`,
+        templateParameters: { lang, text: translations[lang] },
+      }),
+    ),
+  }
+}
 ```
 
-## API call
-
-The example calls:
-
-```http
-GET /v1/projects/:project/translations/:lang?tag=landing&format=nested
-```
-
-The returned object is passed to templates as `text`.

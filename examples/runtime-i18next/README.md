@@ -1,13 +1,16 @@
-# Runtime i18next example
+# runtime-i18next example
 
-This example loads translations from the i18n server at runtime and registers them in `i18next`.
+Load translations at runtime in a React app. Language switching works without a rebuild.
 
-## Request
+## Usage
 
-```http
-GET /v1/projects/:project/translations/:lang?format=nested
+```tsx
+import { App } from './App'
+
+<App
+  lang="en"
+  project="my_project"
+  baseUrl="http://localhost:7996"
+/>
 ```
 
-## Notes
-
-Use this approach when runtime language switching is needed or when translations should not be embedded into the build output.

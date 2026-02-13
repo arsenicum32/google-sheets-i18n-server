@@ -63,3 +63,4 @@ export function App({ lang, project, baseUrl }: AppProps) {
 
   return <div>{i18n.t('home.title')}</div>
 }
+

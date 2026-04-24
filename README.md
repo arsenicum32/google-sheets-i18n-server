@@ -22,8 +22,65 @@ This service treats Google Sheets as the single source of truth. Non-technical t
 
 ## Architecture
 
-![Architecture](docs/arch.png)
+```mermaid
+flowchart LR
 
+  %% SOURCE
+  subgraph Sheets
+    S1[landing]
+    S2[about]
+    S3[pricing]
+    S4[key, en, ru]
+  end
+
+  %% SERVER
+  subgraph Server
+    R[API Router]
+
+    subgraph Services
+      TS[Translation Service]
+      PS[Project Service]
+    end
+
+    subgraph Infra
+      DB[tables.txt]
+      GS[Sheets Client]
+      CACHE[Cache TTL + stale]
+      METRICS[Metrics]
+    end
+  end
+
+  %% CLIENTS
+  subgraph Clients
+    FE[Web]
+    BE[Backend]
+    STATIC[Static build]
+    MOBILE[Mobile]
+  end
+
+  %% FLOW
+  FE --> R
+  BE --> R
+  STATIC --> R
+  MOBILE --> R
+
+  R --> TS
+  R --> PS
+
+  PS --> DB
+
+  TS --> CACHE
+  CACHE --> GS
+  GS --> Sheets
+  CACHE --> TS
+
+  TS --> R
+
+  R --> FE
+  R --> BE
+  R --> STATIC
+  R --> MOBILE
+```
 ## How it works
 
 1. A request arrives for `project / language`
@@ -271,14 +328,6 @@ A persistent cache (Redis et al.) adds infrastructure and consistency concerns. 
 * CLI tool to snapshot translations into static JSON
 
 ## Tests
-
-16 tests across 3 suites, all passing.
-
-| Suite | Tests | What's covered |
-|---|---|---|
-| Cache | 6 | deduplication · stale-while-revalidate · error fallback · key normalization |
-| projectService | 7 | CRUD · input validation · name format rules |
-| translationTransform | 3 | row parsing · empty value handling · flat-to-nested expansion |
 
 ```bash
 npm test          # watch mode

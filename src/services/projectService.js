@@ -2,9 +2,9 @@ const db = require('../infrastructure/db')
 
 const isValidProjectName = (name) => /^[a-zA-Z0-9_-]+$/.test(name)
 
-module.exports = {
+const createProjectService = (projectDb) => ({
   getProjects() {
-    return db.get()
+    return projectDb.get()
   },
 
   async saveProject({ name, value }) {
@@ -16,6 +16,9 @@ module.exports = {
       throw new Error('Project name may contain only letters, numbers, "_" and "-"')
     }
 
-    return db.set(name, value)
+    return projectDb.set(name, value)
   },
-}
+})
+
+module.exports = createProjectService(db)
+module.exports.createProjectService = createProjectService

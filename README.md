@@ -161,7 +161,7 @@ Content-Type: application/json
 ### Get translations (flat)
 
 ```http
-GET /translate/:project/:lang?tag=master
+GET /v1/projects/:project/translations/:lang
 ```
 
 Response:

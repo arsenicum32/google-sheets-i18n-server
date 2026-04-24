@@ -6,9 +6,11 @@ const { router, get, post } = require('microrouter')
 
 const routes = require('./routes')
 const handler = require('./api/handler')
+
 const projectService = require('./services/projectService')
 const translationService = require('./services/translationService')
 const metricsService = require('./services/metricsService')
+const healthService = require('./services/healthService')
 
 const cors = microCors({
   allowMethods: ['GET', 'POST'],
@@ -16,10 +18,9 @@ const cors = microCors({
 
 module.exports = cors(
   router(
-    get(
-      routes.METRICS,
-      handler(() => metricsService.getMetrics()),
-    ),
+    get(routes.HEALTH, handler(() => healthService.health())),
+    get(routes.READY, handler(() => healthService.ready())),
+    get(routes.METRICS, handler(() => metricsService.getMetrics())),
 
     get(
       routes.PROJECTS,
@@ -35,23 +36,13 @@ module.exports = cors(
     ),
 
     get(
-      routes.GET_TRANSLATE,
+      routes.PROJECT_TRANSLATIONS,
       handler(({ params, query }) =>
-        translationService.getFlat({
-          project: params.pid,
+        translationService.getTranslationsResponse({
+          project: params.project,
           lang: params.lang,
-          tag: query.tag,
-        }),
-      ),
-    ),
-
-    get(
-      routes.GET_LANG_BY_GAME,
-      handler(({ params, query }) =>
-        translationService.getStructured({
-          project: params.pid,
-          lang: params.lang,
-          tag: query.tag,
+          tag: query.tag || 'master',
+          format: query.format || 'nested',
         }),
       ),
     ),

@@ -22,13 +22,18 @@ const getTranslations = async ({ project, tag = 'master' }) => {
 }
 
 module.exports = {
-  async getFlat({ project, lang, tag }) {
+  async getTranslationsResponse({ project, lang, tag, format = 'nested' }) {
     const translations = await getTranslations({ project, tag })
-    return translations[lang] || {}
-  },
+    const flat = translations[lang] || {}
 
-  async getStructured({ project, lang, tag }) {
-    const translations = await getTranslations({ project, tag })
-    return flatToNested(translations[lang] || {})
+    if (format === 'flat') {
+      return flat
+    }
+
+    if (format === 'nested') {
+      return flatToNested(flat)
+    }
+
+    throw new Error('Unsupported format. Use "flat" or "nested"')
   },
 }

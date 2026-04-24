@@ -1,7 +1,8 @@
 module.exports = {
   HEALTH: '/health',
   READY: '/ready',
-  PROJECTS: '/projects',
-  GET_TRANSLATE: '/translate/:pid/:lang',
-  GET_LANG_BY_GAME: '/langs/:lang/keys/:pid',
+  METRICS: '/metrics',
+
+  PROJECTS: '/v1/projects',
+  PROJECT_TRANSLATIONS: '/v1/projects/:project/translations/:lang',
 }

@@ -1,21 +1,134 @@
-openapi: 3.0.0
+openapi: 3.0.3
+
 info:
   title: Google Sheets i18n Server
   version: 1.0.0
+  description: HTTP service for serving translations stored in Google Sheets.
+
+servers:
+  - url: http://localhost:7996
 
 paths:
-  /projects:
-    get:
-      summary: Get configured projects
-  /translate/{project}/{lang}:
-    get:
-      summary: Get flat translations
-  /langs/{lang}/keys/{project}:
-    get:
-      summary: Get structured translations
   /health:
     get:
       summary: Healthcheck
+      responses:
+        "200":
+          description: Server is running
+
   /ready:
     get:
       summary: Readiness check
+      responses:
+        "200":
+          description: Server is ready or not ready
+
+  /metrics:
+    get:
+      summary: Runtime metrics
+      responses:
+        "200":
+          description: Cache and runtime metrics
+
+  /v1/projects:
+    get:
+      summary: Get configured projects
+      responses:
+        "200":
+          description: Project map
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+
+    post:
+      summary: Create or update project
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - value
+              properties:
+                name:
+                  type: string
+                  example: my_project
+                value:
+                  type: string
+                  example: 1XWalqAqOPxSSsnBjHeMtfBoP8NO5mHMlDMjf43fvJXk
+      responses:
+        "200":
+          description: Project saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  action:
+                    type: string
+                    enum:
+                      - created
+                      - updated
+
+  /v1/projects/{project}/translations/{lang}:
+    get:
+      summary: Get translations for project and language
+      parameters:
+        - name: project
+          in: path
+          required: true
+          schema:
+            type: string
+          example: my_project
+
+        - name: lang
+          in: path
+          required: true
+          schema:
+            type: string
+          example: en
+
+        - name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+            default: master
+          description: Google Sheet tab name
+
+        - name: format
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - flat
+              - nested
+            default: nested
+
+      responses:
+        "200":
+          description: Translation JSON
+          content:
+            application/json:
+              examples:
+                nested:
+                  value:
+                    home:
+                      title: Home
+                      cta: Start
+                flat:
+                  value:
+                    home.title: Home
+                    home.cta: Start
+
+        "400":
+          description: Invalid request
+
+        "404":
+          description: Project not found

@@ -2,6 +2,8 @@
 
 HTTP service that serves translations stored in Google Sheets — no database, no CMS, no redeploy.
 
+![Overview](docs/overview.png)
+
 **Stack:** Node.js · ESM · Google Sheets API
 
 
@@ -14,9 +16,6 @@ Translation workflows typically fall into one of three traps:
 | JSON files in repo | Every copy change requires a redeploy |
 | CMS / i18n platform | Significant cost and vendor lock-in |
 | Custom backend | Ongoing maintenance burden |
-
-![Overview](docs/overview.png)
-
 
 This service treats Google Sheets as the single source of truth. Non-technical team members edit translations directly; the service fetches, caches, and serves them over HTTP.
 

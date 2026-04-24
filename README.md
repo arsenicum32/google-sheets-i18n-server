@@ -15,6 +15,9 @@ Translation workflows typically fall into one of three traps:
 | CMS / i18n platform | Significant cost and vendor lock-in |
 | Custom backend | Ongoing maintenance burden |
 
+![Overview](docs/overview.png)
+
+
 This service treats Google Sheets as the single source of truth. Non-technical team members edit translations directly; the service fetches, caches, and serves them over HTTP.
 
 

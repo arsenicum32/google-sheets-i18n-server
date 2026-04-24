@@ -1,13 +1,23 @@
 const { google } = require('googleapis')
-const { googleApiKey, cacheTtlMs } = require('../config')
+const {
+  googleApiKey,
+  cacheTtlMs,
+  cacheStaleTtlMs,
+} = require('../config')
+
 const Cache = require('./cache')
+const logger = require('./logger')
 
 const sheets = google.sheets({
   version: 'v4',
   auth: googleApiKey,
 })
 
-const cache = new Cache({ ttlMs: cacheTtlMs })
+const cache = new Cache({
+  ttlMs: cacheTtlMs,
+  staleTtlMs: cacheStaleTtlMs,
+  logger,
+})
 
 const fetchRows = (params) =>
   new Promise((resolve, reject) => {
@@ -24,5 +34,13 @@ const fetchRows = (params) =>
 module.exports = {
   getRows(params) {
     return cache.get(params, fetchRows)
+  },
+
+  getCacheStats() {
+    return cache.getStats()
+  },
+
+  clearCache() {
+    cache.clear()
   },
 }

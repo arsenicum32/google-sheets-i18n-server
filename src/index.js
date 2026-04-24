@@ -8,6 +8,7 @@ const routes = require('./routes')
 const handler = require('./api/handler')
 const projectService = require('./services/projectService')
 const translationService = require('./services/translationService')
+const metricsService = require('./services/metricsService')
 
 const cors = microCors({
   allowMethods: ['GET', 'POST'],
@@ -15,6 +16,11 @@ const cors = microCors({
 
 module.exports = cors(
   router(
+    get(
+      routes.METRICS,
+      handler(() => metricsService.getMetrics()),
+    ),
+
     get(
       routes.PROJECTS,
       handler(() => projectService.getProjects()),

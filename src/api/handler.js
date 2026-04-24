@@ -2,11 +2,16 @@ const { send } = require('micro')
 
 const handler = (fn) => async (req, res) => {
   try {
-    const result = await fn(req)
+    const result = await fn(req, res)
     send(res, 200, result)
   } catch (error) {
-    send(res, 400, {
-      error: error.message,
+    const statusCode = error.statusCode || 500
+
+    send(res, statusCode, {
+      error: {
+        code: error.code || 'INTERNAL_ERROR',
+        message: error.message || 'Internal server error',
+      },
     })
   }
 }

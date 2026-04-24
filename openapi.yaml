@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: Google Sheets i18n Server
+  version: 1.0.0
+
+paths:
+  /projects:
+    get:
+      summary: Get configured projects
+  /translate/{project}/{lang}:
+    get:
+      summary: Get flat translations
+  /langs/{lang}/keys/{project}:
+    get:
+      summary: Get structured translations
+  /health:
+    get:
+      summary: Healthcheck
+  /ready:
+    get:
+      summary: Readiness check

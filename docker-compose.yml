@@ -1,0 +1,14 @@
+services:
+  gsheets-i18n:
+    build: .
+    ports:
+      - "7996:7996"
+    env_file:
+      - .env
+    volumes:
+      - ./tables.txt:/app/tables.txt
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7996/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3

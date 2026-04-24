@@ -1,105 +1,72 @@
 # Google Sheets i18n Server
 
-HTTP service for serving translations stored in Google Sheets.
+HTTP service that serves translations stored in Google Sheets — no database, no CMS, no redeploy.
 
-Designed as a lightweight alternative to traditional i18n backends with minimal infrastructure and fast setup.
-
----
-
-## Problem
-
-Typical approaches to managing translations:
-
-* JSON files in the repository → require redeploy
-* CMS solutions → introduce complexity and cost
-* custom backends → require maintenance
-
-This service uses Google Sheets as a single source of truth and exposes translations over HTTP.
+**Stack:** Node.js · TypeScript · Google Sheets API
 
 ---
 
-## Solution
+## Why
 
-* store translations in Google Sheets
-* fetch and cache them on the server
-* serve them via a simple API
+Translation workflows typically fall into one of three traps:
 
-The system is stateless and requires no database.
+| Approach | Problem |
+|---|---|
+| JSON files in repo | Every copy change requires a redeploy |
+| CMS / i18n platform | Significant cost and vendor lock-in |
+| Custom backend | Ongoing maintenance burden |
 
----
-
-## Key properties
-
-* no persistent storage
-* read-only access to Google Sheets
-* in-memory cache
-* deterministic transformation of tabular data into JSON
+This service treats Google Sheets as the single source of truth. Non-technical team members edit translations directly; the service fetches, caches, and serves them over HTTP.
 
 ---
 
 ## Architecture
 
-```text
-                ┌────────────────────┐
-                │   Google Sheets    │
-                └─────────┬──────────┘
-                          │
-                          ▼
-                ┌────────────────────┐
-                │ Sheets API client  │
-                └─────────┬──────────┘
-                          │
-                          ▼
-                ┌────────────────────┐
-                │   Cache layer      │
-                │ (dedup + reuse)    │
-                └─────────┬──────────┘
-                          │
-                          ▼
-                ┌────────────────────┐
-                │ Transformation     │
-                │ (rows → objects)   │
-                └─────────┬──────────┘
-                          │
-                          ▼
-                ┌────────────────────┐
-                │      HTTP API      │
-                └────────────────────┘
-```
+![Architecture](docs/arch.png)
+
+---
+
+## How it works
+
+1. A request arrives for `project / language`
+2. The cache layer checks for an active entry
+3. On miss — a single request is sent to the Sheets API (concurrent requests share one in-flight Promise to avoid thundering herd)
+4. Raw rows are transformed into a nested JSON object
+5. The response is cached with stale-while-revalidate semantics and returned
+
+The service is stateless. No database, no disk writes.
 
 ---
 
 ## Data model
 
-Each project corresponds to a Google Sheet.
+Each project maps to one Google Sheet. Columns are languages; rows are keys.
 
-### Table structure
-
-| key        | en    | ru      |
-| ---------- | ----- | ------- |
-| home.title | Home  | Главная |
-| home.cta   | Start | Начать  |
+| key | en | ru |
+|---|---|---|
+| home.title | Home | Главная |
+| home.cta | Start | Начать |
 
 Rules:
 
-* first column — translation key
-* other columns — languages
+* first column — translation key (dot-notation, maps to nested structure)
+* remaining columns — one per language
 * first row — headers
 
 ---
 
 ## Transformation
 
-Input (rows):
+Tabular input:
 
 ```text
 [
-  ["key", "en", "ru"],
-  ["home.title", "Home", "Главная"]
+  ["key",        "en",    "ru"     ],
+  ["home.title", "Home",  "Главная"]
 ]
 ```
 
-Output (structured):
+JSON output:
 
 ```json
 {
@@ -111,40 +78,29 @@ Output (structured):
 
 ---
 
-## Caching strategy
+## Caching
 
-The service uses an in-memory cache with two goals:
+Two properties worth calling out:
 
-1. avoid repeated requests to Google Sheets
-2. deduplicate concurrent requests
+**Promise deduplication** — identical concurrent requests share one in-flight Promise. No matter how many simultaneous users hit a cold cache, the Sheets API is called once.
 
-### Behavior
+**Stale-while-revalidate** — expired cache entries are returned immediately while a background refresh runs. Latency stays low even as the cache turns over.
 
-* identical requests share the same in-flight Promise
-* repeated requests within a short time window reuse cached data
-* cache is key-based (request params)
-
-### Trade-offs
-
-* no persistence
-* cache reset on restart
-* potential stale data during TTL window
+Trade-offs: cache is in-process (no distributed invalidation), resets on restart, and can serve stale data within the TTL window.
 
 ---
 
 ## API
 
-### Get projects
+### `GET /projects`
 
-```http
-GET /projects
-```
-
-Returns list of configured projects.
+Returns the list of configured projects.
 
 ---
 
-### Create or update project
+### `POST /projects`
+
+Register or update a project.
 
 ```http
 POST /projects
@@ -158,59 +114,115 @@ Content-Type: application/json
 
 ---
 
-### Get translations (flat)
+### `GET /v1/projects/:project/translations/:lang`
 
-```http
-GET /v1/projects/:project/translations/:lang
-```
-
-Response:
+Returns flat key-value translations.
 
 ```json
-{
-  "home.title": "Home"
-}
+{ "home.title": "Home" }
 ```
+
+Add `?format=nested` for a structured object:
+
+```json
+{ "home": { "title": "Home" } }
+```
+
+Add `?tag=landing` to filter by section tag.
 
 ---
 
-### Get structured translations
+### `GET /langs/:lang/keys/:project`
 
-```http
-GET /langs/:lang/keys/:project?tag=master
+Legacy endpoint, returns structured translations. Supports `?tag=master`.
+
+---
+
+## Examples
+
+### Runtime i18next (React)
+
+Load translations in the browser; supports language switching without rebuild.
+
+```tsx
+async function loadTranslations({ baseUrl, project, lang }) {
+  const response = await fetch(
+    `${baseUrl}/v1/projects/${project}/translations/${lang}?format=nested`,
+  )
+  const resources = await response.json()
+  i18n.addResourceBundle(lang, 'translation', resources, true, true)
+  await i18n.changeLanguage(lang)
+}
+
+export function App({ lang, project, baseUrl }) {
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    loadTranslations({ lang, project, baseUrl }).then(() => setIsLoaded(true))
+  }, [lang, project, baseUrl])
+
+  if (!isLoaded) return <div>Loading…</div>
+  return <div>{i18n.t('home.title')}</div>
+}
 ```
 
-Response:
+Full example: [examples/runtime-i18next/](examples/runtime-i18next/)
 
-```json
-{
-  "home": {
-    "title": "Home"
+---
+
+### Webpack plugin (build-time JSON bundles)
+
+Writes language JSON files into the output directory during build. Drop-in for apps that already load translation JSON at runtime.
+
+```ts
+plugins: [
+  new SaverLangsPlugin({
+    url: 'http://localhost:7996/v1/projects/app/translations/all?tag=master&format=nested',
+    outputPath: path.resolve(__dirname, 'dist/i18n'),
+    variant: 'main',
+    hash: process.env.BUILD_HASH || 'dev',
+    languageNames: { en: 'English', ru: 'Русский' },
+  }),
+]
+```
+
+Output:
+
+```text
+dist/i18n/languages.main.abc123.json
+dist/i18n/en.main.abc123.json
+dist/i18n/ru.main.abc123.json
+```
+
+Full example: [examples/webpack-plugin/](examples/webpack-plugin/)
+
+---
+
+### Webpack static generation (build-time HTML)
+
+Fetches translations at build time and generates per-locale static HTML via `HtmlWebpackPlugin`. Best for landing pages and SEO-critical sites.
+
+```js
+module.exports = async () => {
+  const translations = Object.fromEntries(
+    await Promise.all(
+      LANGUAGES.map(async lang => [lang, await loadTranslations(lang)]),
+    ),
+  )
+
+  return {
+    plugins: LANGUAGES.map(lang =>
+      new HtmlWebpackPlugin({
+        template: './src/index.html',
+        filename: lang === 'en' ? 'index.html' : `${lang}/index.html`,
+        templateParameters: { lang, text: translations[lang] },
+      }),
+    ),
   }
 }
 ```
 
----
-
-## Example usage
-
-### Frontend (React)
-
-```js
-const loadTranslations = async () => {
-  const res = await fetch('/langs/en/keys/my_project')
-  return res.json()
-}
-```
-
----
-
-### Backend (Node.js)
-
-```js
-const res = await fetch('http://localhost:7996/translate/my_project/en')
-const translations = await res.json()
-```
+Full example: [examples/webpack-static-generation/](examples/webpack-static-generation/)
 
 ---
 
@@ -222,8 +234,6 @@ const translations = await res.json()
 npm install
 ```
 
----
-
 ### 2. Configure environment
 
 `.env`
@@ -233,17 +243,13 @@ AUTH_KEY=your_google_api_key
 PORT=7996
 ```
 
----
-
-### 3. Configure projects
+### 3. Register projects
 
 `tables.txt`
 
 ```txt
 my_project=GOOGLE_SHEETS_ID
 ```
-
----
 
 ### 4. Run
 
@@ -255,56 +261,42 @@ npm start
 
 ## Design decisions
 
-### Why Google Sheets
+### Google Sheets as a data store
 
-* accessible for non-developers
-* built-in versioning
-* no need for UI development
+Non-developers can manage translations without learning a CMS. Sheets has built-in history, comments, and access control — features that would require significant effort to replicate.
 
----
+### No database
 
-### Why no database
+The service holds no authoritative data — Google Sheets does. A database would create a sync problem and another thing to operate. Without it, the service is trivially replaceable and horizontally scalable.
 
-* reduces operational complexity
-* avoids data duplication
-* keeps system stateless
+### In-memory cache with promise deduplication
 
----
-
-### Why in-memory cache
-
-* simplest possible solution
-* sufficient for most read-heavy scenarios
+A persistent cache (Redis et al.) adds infrastructure and consistency concerns. In-memory is sufficient given that: (a) cache misses go directly to Google, not a slow DB, and (b) promise deduplication means a cold cache under load still makes only one upstream call.
 
 ---
 
 ## Limitations
 
-* no write API
-* no authentication
-* cache is not distributed
-* depends on Google Sheets availability
+* no write API — translations must be edited in Google Sheets directly
+* cache is not distributed — each instance holds its own state
+* depends on Google Sheets API availability
+* no built-in authentication on translation endpoints
 
 ---
 
 ## Possible extensions
 
-* Redis-based cache
-* webhook-driven cache invalidation
-* OpenAPI schema
-* authentication layer
-* CLI for syncing data
-
----
-
-## Development
-
-```bash
-npm start
-```
+* Redis cache with shared invalidation
+* Webhook endpoint to trigger cache flush on sheet edit
+* Authentication middleware
+* CLI tool to snapshot translations into static JSON
 
 ---
 
 ## License
 
 MIT
+
+---
+
+Built by [ars33](https://popov.ars.world)

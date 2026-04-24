@@ -1,16 +1,18 @@
 {
-  "name": "redisweb",
+  "name": "gsheets-i18n-server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "HTTP service for serving translations stored in Google Sheets",
+  "main": "src/index.js",
+  "license": "MIT",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "micro -l tcp://0.0.0.0:${PORT-7996} src/index.js",
+    "dev": "micro -l tcp://0.0.0.0:${PORT-7996} src/index.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1",
-    "redis": "^3.0.2"
+    "dotenv": "^16.0.0",
+    "googleapis": "^39",
+    "micro": "^9.3.4",
+    "micro-cors": "^0.1.1",
+    "microrouter": "^3.1.3"
   }
 }

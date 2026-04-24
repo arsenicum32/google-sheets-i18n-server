@@ -1,10 +1,6 @@
-const db = require('../infrastructure/db')
-const sheetsClient = require('../infrastructure/sheetsClient')
-
-const {
-  rowsToTranslations,
-  flatToNested,
-} = require('./translationTransform')
+import db from '../infrastructure/db.js'
+import sheetsClient from '../infrastructure/sheetsClient.js'
+import { rowsToTranslations, flatToNested } from './translationTransform.js'
 
 const getTranslations = async ({ project, tag = 'master' }) => {
   const spreadsheetId = await db.get(project)
@@ -21,7 +17,7 @@ const getTranslations = async ({ project, tag = 'master' }) => {
   return rowsToTranslations(rows)
 }
 
-module.exports = {
+export default {
   async getTranslationsResponse({ project, lang, tag, format = 'nested' }) {
     const translations = await getTranslations({ project, tag })
     const flat = translations[lang] || {}

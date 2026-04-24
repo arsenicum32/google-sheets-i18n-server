@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   HEALTH: '/health',
   READY: '/ready',
   METRICS: '/metrics',

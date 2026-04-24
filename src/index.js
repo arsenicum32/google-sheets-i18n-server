@@ -1,22 +1,20 @@
-require('dotenv').config()
+import { send, json } from 'micro'
+import microCors from 'micro-cors'
+import { router, get, post } from 'microrouter'
 
-const microCors = require('micro-cors')
-const { send, json } = require('micro')
-const { router, get, post } = require('microrouter')
+import routes from './routes.js'
+import handler from './api/handler.js'
 
-const routes = require('./routes')
-const handler = require('./api/handler')
-
-const projectService = require('./services/projectService')
-const translationService = require('./services/translationService')
-const metricsService = require('./services/metricsService')
-const healthService = require('./services/healthService')
+import projectService from './services/projectService.js'
+import translationService from './services/translationService.js'
+import metricsService from './services/metricsService.js'
+import healthService from './services/healthService.js'
 
 const cors = microCors({
   allowMethods: ['GET', 'POST'],
 })
 
-module.exports = cors(
+export default cors(
   router(
     get(routes.HEALTH, handler(() => healthService.health())),
     get(routes.READY, handler(() => healthService.ready())),
@@ -47,7 +45,7 @@ module.exports = cors(
       ),
     ),
 
-    get('/', (req, res) => send(res, 200, { status: 'ok' })),
-    get('/*', (req, res) => send(res, 404, { error: 'Not found' })),
+    get('/', (_req, res) => send(res, 200, { status: 'ok' })),
+    get('/*', (_req, res) => send(res, 404, { error: 'Not found' })),
   ),
 )

@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import projectServiceModule from '../src/services/projectService.js'
-
-const { createProjectService } = projectServiceModule
+import { createProjectService } from '../src/services/projectService.js'
 
 describe('projectService', () => {
   let db

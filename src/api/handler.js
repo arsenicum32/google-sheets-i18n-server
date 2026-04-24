@@ -1,4 +1,4 @@
-const { send } = require('micro')
+import { send } from 'micro'
 
 const handler = (fn) => async (req, res) => {
   try {
@@ -16,4 +16,4 @@ const handler = (fn) => async (req, res) => {
   }
 }
 
-module.exports = handler
+export default handler

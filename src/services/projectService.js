@@ -1,8 +1,8 @@
-const db = require('../infrastructure/db')
+import db from '../infrastructure/db.js'
 
 const isValidProjectName = (name) => /^[a-zA-Z0-9_-]+$/.test(name)
 
-const createProjectService = (projectDb) => ({
+export const createProjectService = (projectDb) => ({
   getProjects() {
     return projectDb.get()
   },
@@ -20,5 +20,4 @@ const createProjectService = (projectDb) => ({
   },
 })
 
-module.exports = createProjectService(db)
-module.exports.createProjectService = createProjectService
+export default createProjectService(db)

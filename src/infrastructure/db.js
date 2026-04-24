@@ -1,12 +1,12 @@
-const { promises: fs } = require('fs')
-const { tablesPath } = require('../config')
+import { promises as fs } from 'fs'
+import config from '../config.js'
 
 const encoding = 'utf8'
 const splitter = '='
 
 const readProjects = async () => {
   try {
-    const data = await fs.readFile(tablesPath, { encoding })
+    const data = await fs.readFile(config.tablesPath, { encoding })
     const projects = new Map()
 
     for (const row of data.split('\n')) {
@@ -32,10 +32,10 @@ const writeProjects = async (projects) => {
     .map(([key, value]) => `${key}${splitter}${value}`)
     .join('\n')
 
-  await fs.writeFile(tablesPath, data, { encoding })
+  await fs.writeFile(config.tablesPath, data, { encoding })
 }
 
-module.exports = {
+export default {
   async get(name) {
     const projects = await readProjects()
 

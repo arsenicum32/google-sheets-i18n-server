@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-const Cache = require('../src/infrastructure/cache')
+import Cache from '../src/infrastructure/cache.js'
 
 describe('Cache', () => {
   beforeEach(() => {

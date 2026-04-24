@@ -1,6 +1,6 @@
-const { googleApiKey } = require('../config')
+import config from '../config.js'
 
-module.exports = {
+export default {
   health() {
     return {
       status: 'ok',
@@ -10,9 +10,9 @@ module.exports = {
 
   ready() {
     return {
-      status: googleApiKey ? 'ready' : 'not_ready',
+      status: config.googleApiKey ? 'ready' : 'not_ready',
       checks: {
-        googleApiKey: Boolean(googleApiKey),
+        googleApiKey: Boolean(config.googleApiKey),
       },
     }
   },

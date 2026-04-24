@@ -1,6 +1,6 @@
-const sheetsClient = require('../infrastructure/sheetsClient')
+import sheetsClient from '../infrastructure/sheetsClient.js'
 
-module.exports = {
+export default {
   getMetrics() {
     return {
       cache: sheetsClient.getCacheStats(),

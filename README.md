@@ -2,9 +2,8 @@
 
 HTTP service that serves translations stored in Google Sheets — no database, no CMS, no redeploy.
 
-**Stack:** Node.js · TypeScript · Google Sheets API
+**Stack:** Node.js · ESM · Google Sheets API
 
----
 
 ## Why
 
@@ -18,13 +17,10 @@ Translation workflows typically fall into one of three traps:
 
 This service treats Google Sheets as the single source of truth. Non-technical team members edit translations directly; the service fetches, caches, and serves them over HTTP.
 
----
 
 ## Architecture
 
 ![Architecture](docs/arch.png)
-
----
 
 ## How it works
 
@@ -35,8 +31,6 @@ This service treats Google Sheets as the single source of truth. Non-technical t
 5. The response is cached with stale-while-revalidate semantics and returned
 
 The service is stateless. No database, no disk writes.
-
----
 
 ## Data model
 
@@ -53,7 +47,6 @@ Rules:
 * remaining columns — one per language
 * first row — headers
 
----
 
 ## Transformation
 
@@ -76,8 +69,6 @@ JSON output:
 }
 ```
 
----
-
 ## Caching
 
 Two properties worth calling out:
@@ -88,7 +79,6 @@ Two properties worth calling out:
 
 Trade-offs: cache is in-process (no distributed invalidation), resets on restart, and can serve stale data within the TTL window.
 
----
 
 ## API
 
@@ -96,7 +86,6 @@ Trade-offs: cache is in-process (no distributed invalidation), resets on restart
 
 Returns the list of configured projects.
 
----
 
 ### `POST /projects`
 
@@ -112,7 +101,6 @@ Content-Type: application/json
 }
 ```
 
----
 
 ### `GET /v1/projects/:project/translations/:lang`
 
@@ -130,13 +118,11 @@ Add `?format=nested` for a structured object:
 
 Add `?tag=landing` to filter by section tag.
 
----
 
 ### `GET /langs/:lang/keys/:project`
 
 Legacy endpoint, returns structured translations. Supports `?tag=master`.
 
----
 
 ## Examples
 
@@ -168,7 +154,6 @@ export function App({ lang, project, baseUrl }) {
 
 Full example: [examples/runtime-i18next/](examples/runtime-i18next/)
 
----
 
 ### Webpack plugin (build-time JSON bundles)
 
@@ -196,7 +181,6 @@ dist/i18n/ru.main.abc123.json
 
 Full example: [examples/webpack-plugin/](examples/webpack-plugin/)
 
----
 
 ### Webpack static generation (build-time HTML)
 
@@ -224,7 +208,6 @@ module.exports = async () => {
 
 Full example: [examples/webpack-static-generation/](examples/webpack-static-generation/)
 
----
 
 ## Setup
 
@@ -257,8 +240,6 @@ my_project=GOOGLE_SHEETS_ID
 npm start
 ```
 
----
-
 ## Design decisions
 
 ### Google Sheets as a data store
@@ -273,16 +254,12 @@ The service holds no authoritative data — Google Sheets does. A database would
 
 A persistent cache (Redis et al.) adds infrastructure and consistency concerns. In-memory is sufficient given that: (a) cache misses go directly to Google, not a slow DB, and (b) promise deduplication means a cold cache under load still makes only one upstream call.
 
----
-
 ## Limitations
 
 * no write API — translations must be edited in Google Sheets directly
 * cache is not distributed — each instance holds its own state
 * depends on Google Sheets API availability
 * no built-in authentication on translation endpoints
-
----
 
 ## Possible extensions
 
@@ -291,12 +268,23 @@ A persistent cache (Redis et al.) adds infrastructure and consistency concerns. 
 * Authentication middleware
 * CLI tool to snapshot translations into static JSON
 
----
+## Tests
+
+16 tests across 3 suites, all passing.
+
+| Suite | Tests | What's covered |
+|---|---|---|
+| Cache | 6 | deduplication · stale-while-revalidate · error fallback · key normalization |
+| projectService | 7 | CRUD · input validation · name format rules |
+| translationTransform | 3 | row parsing · empty value handling · flat-to-nested expansion |
+
+```bash
+npm test          # watch mode
+npm run test:run  # single run (used in CI)
+```
 
 ## License
 
 MIT
-
----
 
 Built by [ars33](https://popov.ars.world)

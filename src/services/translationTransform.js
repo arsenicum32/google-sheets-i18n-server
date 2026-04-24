@@ -1,6 +1,6 @@
 const emptyToNull = (value) => (value === '' ? null : value)
 
-const rowsToTranslations = (rows) => {
+export const rowsToTranslations = (rows) => {
   if (!rows.length) {
     return {}
   }
@@ -26,7 +26,7 @@ const rowsToTranslations = (rows) => {
   }, {})
 }
 
-const flatToNested = (translations) =>
+export const flatToNested = (translations) =>
   Object.entries(translations).reduce((acc, [key, value]) => {
     const parts = key.split('.')
     let cursor = acc
@@ -42,8 +42,3 @@ const flatToNested = (translations) =>
 
     return acc
   }, {})
-
-module.exports = {
-  rowsToTranslations,
-  flatToNested,
-}

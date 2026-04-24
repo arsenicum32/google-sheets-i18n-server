@@ -1,4 +1,4 @@
-class Cache {
+export default class Cache {
   constructor({
     ttlMs = 5000,
     staleTtlMs = 60_000,
@@ -70,11 +70,9 @@ class Cache {
 
     this.stats.refresh += 1
 
-    const promise = this.fetchAndStore(cacheKey, originalKey, fetcher, {
+    return this.fetchAndStore(cacheKey, originalKey, fetcher, {
       keepStaleOnError: true,
     })
-
-    return promise
   }
 
   async fetchAndStore(
@@ -139,5 +137,3 @@ class Cache {
     this.items.clear()
   }
 }
-
-module.exports = Cache
